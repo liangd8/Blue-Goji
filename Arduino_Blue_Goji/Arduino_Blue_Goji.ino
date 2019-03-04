@@ -1,17 +1,22 @@
 //Digital Pin Numbers
-int pedalEn;
 int dcMotorPWMA = 5;
 int dcMotorPWMB = 6;
+int signal2belt = 9;
 
 //Analog Pin Numbers
 int motorPot = 1;
+int ResistanceCTRL = 5;
 
 //Motor Parameters
-int potMin = 0; //Determine this reading from the bike
-double potMaxV = 1.67; //Determine this reading from the bike
-int potMax = potMaxV/5*1023; //potMaxV in terms of 1024 analog reading (max around 360)
+//int potMin = 0; //Determine this reading from the bike
+//double potMaxV = 1.67; //Determine this reading from the bike
+//int potMax = potMaxV/5*1023; //potMaxV in terms of 1024 analog reading (max around 360)
+int potMin = 290;
+int potMax = 590;
+int potDesRaw;
+int potDesRawMap;
 double potDes; //Resistance value here
-double tol = 50; //Resistance pot reading error tolerance
+double tol = 5; //Resistance pot reading error tolerance
 
 //Variables
 int resistance;
@@ -54,7 +59,6 @@ void calcSpeed() {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(57600);
-  pinMode(pedalEn, INPUT);
   pinMode(motorPot, INPUT);
 
   //Pedal Velocity Setup
@@ -68,8 +72,10 @@ void loop() {
   if (currentTime - previousTime >= interval) {calcSpeed();} //Every interval (1second right now), calculate speed
   //End Pedal Velocity Calculation//
 
-  potDes = map(analogRead(5), 0, 1023, potMin, potMax); //Pot controlled Resistance
-  
+  potDesRaw = analogRead(ResistanceCTRL);
+  potDesRawMap = map(potDesRaw, 0, 1023, 0, 255);
+  analogWrite(signal2belt, potDesRawMap); //Send signal to belt
+  potDes = map(potDesRaw, 0, 1023, potMin, potMax); //Pot controlled Resistance
   //Serial.println(count);
   resistance = analogRead(motorPot);
   
@@ -93,6 +99,14 @@ void loop() {
  Serial.print(currentTime);
  Serial.print("  IntervalCount: ");
  Serial.print(intervalCount);
+ Serial.print("  Motor Pot: ");
+ Serial.print(resistance);
+ Serial.print("  Desired MotorPos: ");
+ Serial.print(potDes);
+ Serial.print("  potDesRaw: ");
+ Serial.print(potDesRaw);
+ Serial.print("  potDesRawMap: ");
+ Serial.print(potDesRawMap);
  Serial.print("  PedalSpeed: ");
  Serial.println(pedalSpeed);
 }
